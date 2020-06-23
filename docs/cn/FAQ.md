@@ -1,4 +1,5 @@
 * [日志目录](#日志目录)
+* [not find proxy for agent](#not-find-proxy-for-agent)
 * [获取ip错误](#获取ip错误)
 * [agent attach时加载初始化类失败](#agent-attach时加载初始化类失败)
 * [windows 环境暂时不支持](#windows-环境)
@@ -26,6 +27,17 @@
 | 3. ui             | 解压缩目录/bistoury-ui-bin/logs    |
 | 4. attach到应用中的部分 | 应用进程所属用户的主目录/logs/   |
 
+### not find proxy for agent
+
+---
+
+问题原因：出现这个错误的根本原因就是ui根据应用中心的ip从所有proxy上都没有查询到agent的注册信息
+
+问题排查：
+   - 检查proxy的日志，看下proxy是否启动成功
+   - 访问proxyip:proxyPory/proxy.html（可能需要到每台proxy都去看一下） 到版本信息里面使用agent的ip去查询一下
+      - 如果不存在，则说明agent没有连接到proxy，检查下agent的日志
+      - 如果存在，则说明应用中心的ip和agent上报的ip不一样，可以修改应用中心的ip，也可以在agent启动的时候通过-i参数指定你需要的ip      
 ### 获取ip错误
 
 ---
@@ -36,11 +48,14 @@
 
 - no proxy for agent
 
-原因是本机可能存在多个ip，导致获取的ip不是当前正在使用的ip（获取到的ip可以在各个日志中查看，也可以在应用中心查看），从而出错，
+原因如下：
+
+- 本机可能存在多个ip，导致获取的ip不是当前正在使用的ip（获取到的ip可以在各个日志中查看，也可以在应用中心查看），从而出错
+- 当使用外网的虚拟机时，本地使用服务器获取到的内网ip时无法连通的，需要在启动时将ip指定为外网ip
 
 可以通过`quick_start.sh`脚本中的-i参数指定当前的ip。
 
-例子 :
+例子 : 其中`1024`为你要诊断的应用的进程号
 ```
 ./quick_start.sh -i 127.0.0.1 -p 1024 start
 ```
@@ -58,6 +73,7 @@
 解决办法就是指定一下相应的类名，因为不能是agent使用到的类，推荐使用用户自身中间件jar包或者spring中类（注意要是已加载的类），如果使用业务类，可能导致小部分功能不可用。
 
 例子 :
+其中`1024`为你要诊断的应用的进程号
 ![./quick_start.sh -c org.springframework.web.servlet.DispatcherServlet(不要照抄) -p 1024 start](../image/cannot_lib_class.png)
 
 如果自身依赖中有相应的类，但是还是报"`can not find lib class`"，这种情况应该是类没有加载。
@@ -79,18 +95,18 @@
 
 ---
 #### 应用jdk版本要求
-> 暂时只支持包括jdk7\jdk8在内的应用, 没有测试过低于jdk7的版本, jdk9以上改动比较大, 暂时不支持.
+> 暂时只支持使用java1.7+的应用，当agent和应用Java版本不一致时可能会出现不可预计的错误, 没有测试过低于jdk7的版本。
 
 #### bistoury自带模块最低的jdk版本要求
 |      模块            | 最低jdk版本                         |
 |:---------------------|:------------------------------|
-| 1. agent          | jdk7|
-| 2. proxy         | jdk8 |
-| 3. ui             | jdk8   |
+| 1. agent          | Java1.7+|
+| 2. proxy         | Java1.8+ |
+| 3. ui             | Java1.8+   |
 
-> 如果是使用快速启动脚本，需使用JDK8
+> 如果是使用快速启动脚本，需使用Java1.8+
 
-> 手动指定 **`JAVA_HOME`** 目录(例如目录为`/lib/java_1.8/home`) : `./quick_start.sh -j /lib/java_1.8/home -p 1024 start`
+> 手动指定 **`JAVA_HOME`** 目录(例如目录为`/lib/java_1.8/home`) : `./quick_start.sh -j /lib/java_1.8/home -p 1024(应用进程pid) start`
 
 ### 端口问题
 

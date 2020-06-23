@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 H2_DIR=`pwd`
 H2_LOG_FILE=$H2_DIR/h2.log
@@ -75,7 +75,7 @@ stop(){
     then
       echo "no h2 database to stop (could not find file $H2_PID_FILE)"
     else
-      kill -9 $(cat "$H2_PID_FILE")
+      kill $(cat "$H2_PID_FILE")
       rm "$H2_PID_FILE"
       rm "$H2_PORT_FILE"
       echo "STOPPED"
